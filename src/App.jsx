@@ -56,6 +56,44 @@ function Points({ children }) {
 
 const antonStyle = { fontFamily: "'Anton', sans-serif" };
 
+// LET OP: deze hulpcomponenten staan bewust op het top-niveau van
+// de module en NIET binnen een andere component. Een component die
+// binnen een andere component is gedefinieerd, wordt bij elke
+// re-render als "nieuw" gezien door React. De DOM-node wordt dan
+// ontkoppeld en opnieuw aangemaakt, waardoor je na elke toetsaanslag
+// de focus verliest. Door ze hier te plaatsen blijft de input
+// identiteit behouden tussen renders.
+function OranjeQuestion({ label, value, onChange }) {
+  return (
+    <div>
+      <label className="block font-medium mb-1">{label} <Points>15 pt</Points></label>
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="Naam speler..."
+        className="w-full px-3 py-2 border-2 border-stone-300 rounded focus:outline-none focus:border-orange-500"
+      />
+    </div>
+  );
+}
+
+function CountryGrid({ label, points, values, onChange, cols2 = false }) {
+  return (
+    <div className="bg-white border-2 border-stone-200 rounded-xl p-4">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <h3 className="font-bold">{label}</h3>
+        <Points>{points}</Points>
+      </div>
+      <div className={`grid grid-cols-2 gap-2 ${cols2 ? 'md:grid-cols-2 max-w-md' : 'md:grid-cols-4'}`}>
+        {values.map((val, idx) => (
+          <LandSelect key={idx} value={val} onChange={v => onChange(idx, v)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* =============================================================
    SECTIES
    ============================================================= */
@@ -245,20 +283,6 @@ function ExtraSection({ data, setData }) {
     updateExtra(field, arr);
   };
 
-  const CountryGrid = ({ label, field, points, cols2 = false }) => (
-    <div className="bg-white border-2 border-stone-200 rounded-xl p-4">
-      <div className="flex items-baseline justify-between mb-3 gap-2">
-        <h3 className="font-bold">{label}</h3>
-        <Points>{points}</Points>
-      </div>
-      <div className={`grid grid-cols-2 gap-2 ${cols2 ? 'md:grid-cols-2 max-w-md' : 'md:grid-cols-4'}`}>
-        {data.extra[field].map((val, idx) => (
-          <LandSelect key={idx} value={val} onChange={v => updateArray(field, idx, v)} />
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       <div>
@@ -305,11 +329,37 @@ function ExtraSection({ data, setData }) {
         </div>
       </div>
 
-      <CountryGrid label="Welke 32 landen gaan naar de achtste finales? (1 pt per land)" field="landen32" points="32 pt" />
-      <CountryGrid label="Welke 16 landen gaan door naar de kwartfinales? (2 pt per land)" field="landen16" points="32 pt" />
-      <CountryGrid label="Welke 8 landen naar de halve finales? (4 pt per land)" field="landen8" points="32 pt" />
-      <CountryGrid label="Welke 4 landen naar de halve finales? (8 pt per land)" field="landen4" points="32 pt" />
-      <CountryGrid label="Wat is de finale? (20 pt per land)" field="finaleLanden" points="40 pt" cols2 />
+      <CountryGrid
+        label="Welke 32 landen gaan naar de achtste finales? (1 pt per land)"
+        points="32 pt"
+        values={data.extra.landen32}
+        onChange={(idx, v) => updateArray('landen32', idx, v)}
+      />
+      <CountryGrid
+        label="Welke 16 landen gaan door naar de kwartfinales? (2 pt per land)"
+        points="32 pt"
+        values={data.extra.landen16}
+        onChange={(idx, v) => updateArray('landen16', idx, v)}
+      />
+      <CountryGrid
+        label="Welke 8 landen naar de halve finales? (4 pt per land)"
+        points="32 pt"
+        values={data.extra.landen8}
+        onChange={(idx, v) => updateArray('landen8', idx, v)}
+      />
+      <CountryGrid
+        label="Welke 4 landen naar de halve finales? (8 pt per land)"
+        points="32 pt"
+        values={data.extra.landen4}
+        onChange={(idx, v) => updateArray('landen4', idx, v)}
+      />
+      <CountryGrid
+        label="Wat is de finale? (20 pt per land)"
+        points="40 pt"
+        values={data.extra.finaleLanden}
+        onChange={(idx, v) => updateArray('finaleLanden', idx, v)}
+        cols2
+      />
 
       <div className="bg-white border-2 border-stone-200 rounded-xl p-4 space-y-4">
         <div>
@@ -339,20 +389,7 @@ function ExtraSection({ data, setData }) {
 }
 
 function OranjeSection({ data, setData }) {
-  const update = (field, value) => 
-    setData({ ...data, oranje: { ...data.oranje, [field]: value } });
-  const Q = ({ label, field }) => (
-    <div>
-      <label className="block font-medium mb-1">{label} <Points>15 pt</Points></label>
-      <input
-        type="text"
-        value={data.oranje[field]}
-        onChange={e => update(field, e.target.value)}
-        placeholder="Naam speler..."
-        className="w-full px-3 py-2 border-2 border-stone-300 rounded focus:outline-none focus:border-orange-500"
-      />
-    </div>
-  );
+  const update = (field, value) => setData({ ...data, oranje: { ...data.oranje, [field]: value } });
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-2xl">
@@ -360,10 +397,26 @@ function OranjeSection({ data, setData }) {
         <p className="opacity-95 mt-1">Voorspel hoe Oranje het gaat doen.</p>
       </div>
       <div className="bg-white border-2 border-stone-200 rounded-xl p-6 space-y-4">
-        <Q label="Wie scoort het eerste doelpunt voor Nederland?" field="eersteDoelpunt" />
-        <Q label="Wie krijgt, van het Nederlands team, de eerste kaart?" field="eersteKaart" />
-        <Q label="Wie wordt als eerste van het Nederlands team gewisseld?" field="eerstGewisseld" />
-        <Q label="Wie wordt de topscorer van het Nederlands team?" field="topscoorder" />
+        <OranjeQuestion
+          label="Wie scoort het eerste doelpunt voor Nederland?"
+          value={data.oranje.eersteDoelpunt}
+          onChange={v => update('eersteDoelpunt', v)}
+        />
+        <OranjeQuestion
+          label="Wie krijgt, van het Nederlands team, de eerste kaart?"
+          value={data.oranje.eersteKaart}
+          onChange={v => update('eersteKaart', v)}
+        />
+        <OranjeQuestion
+          label="Wie wordt als eerste van het Nederlands team gewisseld?"
+          value={data.oranje.eerstGewisseld}
+          onChange={v => update('eerstGewisseld', v)}
+        />
+        <OranjeQuestion
+          label="Wie wordt de topscorer van het Nederlands team?"
+          value={data.oranje.topscoorder}
+          onChange={v => update('topscoorder', v)}
+        />
       </div>
     </div>
   );
