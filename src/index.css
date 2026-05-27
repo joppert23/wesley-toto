@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  margin: 0;
+}
