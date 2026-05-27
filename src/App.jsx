@@ -339,7 +339,8 @@ function ExtraSection({ data, setData }) {
 }
 
 function OranjeSection({ data, setData }) {
-  const update = (field, value) => setData({ ...data, oranje: { ...data.oranje, [field]: value } });
+  const update = (field, value) => 
+    setData({ ...data, oranje: { ...data.oranje, [field]: value } });
   const Q = ({ label, field }) => (
     <div>
       <label className="block font-medium mb-1">{label} <Points>15 pt</Points></label>
